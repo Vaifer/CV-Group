@@ -8,11 +8,12 @@ from train import Trainer
 
 class train_set:
 
-    def __init__(self,csv_file,img_dir):
+    def __init__(self,csv_file,img_dir,transform):
         self.csv_file = csv_file
         self.img_dir = img_dir
+        self.transform=transform
 
-    def baseline_trainer(self,lr=0.001,num_epochs=16):
+    def baseline_trainer(self,transform, lr=0.001, num_epochs=16):
         '''
         Baseline for stable_height classification
         :param lr:
@@ -20,16 +21,11 @@ class train_set:
         :return:
         '''
         # choose model
-        model = models.Stack_GoogleNet()  # Use your modified multi-class classification model
+        model = models.Stack_Inception()  # Use your modified multi-class classification model
 
         # define optimizer
         criterion = torch.nn.CrossEntropyLoss()  # For multi-class classification
         optimizer = optim.Adam(model.parameters(), lr=lr)
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
         # define Trainer
         return Trainer(
             self.csv_file,
@@ -65,7 +61,7 @@ class train_set:
             self.csv_file,
             self.img_dir,
             model=model,
-            transform= transform,
+            transform= self.transform,
             stratify_column="instability_type",
             criterion=criterion,
             optimizer=optimizer,
@@ -105,10 +101,15 @@ if __name__ == "__main__":
     train_csv_dir = './COMP90086_2024_Project_train/train.csv'
     train_img_dir = './COMP90086_2024_Project_train/train'
 
-    train_set=train_set(train_csv_dir,train_img_dir)
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    train_set=train_set(train_csv_dir,train_img_dir,transform)
     #choose trainer
     # baseline:用于尝试各种model
-    trainer=train_set.baseline_trainer()
+    trainer=train_set.baseline_trainer(transform)
 
     # instabilityType :训练 分类 不稳定类型
     # trainer=train_set.instabilityType_trainer()
