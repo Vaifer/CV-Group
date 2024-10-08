@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from torchvision import transforms
 from tqdm import tqdm
 from sklearn.model_selection import StratifiedShuffleSplit
-from model import Stack_GoogleNet,  Stack_Vit
+from models import Stack_GoogleNet,  Stack_Vit
 from dataSet import train_dataSet, test_dataSet  # 假设 BlockStackDataset 是定义的数据集类
 
 class BlockStackTrainer:

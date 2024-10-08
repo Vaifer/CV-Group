@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 from dataSet import test_dataSet  # Assuming test_dataSet is the class to load test data
-from model import Stack_GoogleNet
+import models
 
 
 class StackPredictor:
@@ -82,7 +82,7 @@ class StackPredictor:
 
 if __name__ == "__main__":
     # Define the model (assuming it's the same architecture used during training)
-    model = Stack_GoogleNet()
+    model = models.Stack_GoogleNet()
 
     # Paths to required files
     model_path = 'trained_models/experiment_2024-10-08_15-49-29/best_model.pth'  # Path to the saved model

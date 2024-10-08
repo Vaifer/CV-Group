@@ -43,12 +43,15 @@ class train_dataSet(Dataset):
         # (1) low or (2) high
         cam_angle = self.data_frame.iloc[idx, 5]
 
+        # Create new 'stable' column based on 'instability_type'
+        # stable = 0 if instability_type == 0 else 1
+
         # preprocessing <- transform
         if self.transform:
             image = self.transform(image)
 
         # choose column here
-        return image, label, instability_type
+        return image, label , instability_type
 
 class test_dataSet(Dataset):
     def __init__(self, data_frame, img_dir, transform=None):

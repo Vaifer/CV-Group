@@ -10,16 +10,16 @@ from sklearn.metrics import classification_report, confusion_matrix
 from torchvision import transforms
 from tqdm import tqdm
 from sklearn.model_selection import StratifiedShuffleSplit
-import model
+import models
 from dataSet import train_dataSet
 
 class Trainer:
-    def __init__(self, csv_file, img_dir, model, transform, criterion, optimizer, random_state=8, test_size=0.2, batch_size=32, num_epochs=10):
+    def __init__(self,csv_file, img_dir, model, transform,criterion, optimizer, stratify_column,random_state=8, test_size=0.2, batch_size=32, num_epochs=10):
         # Initialize training parameters
         self.csv_file = csv_file
         self.img_dir = img_dir
         self.model = model
-        self.stratify_column = 'stable_height'  # Column used for stratified sampling
+        self.stratify_column = stratify_column  # choose label
         self.test_size = test_size
         self.batch_size = batch_size
         self.num_epochs = num_epochs
@@ -29,6 +29,7 @@ class Trainer:
 
         # Pre-processing <- transform
         self.transform = transform
+        # self.transform = transform
 
         # Loss function and optimizer
         self.criterion = criterion
@@ -47,8 +48,8 @@ class Trainer:
 
         print(f"train_size: {len(train_data)}, val_size: {len(val_data)}")
 
-        train_dataset = train_dataSet(train_data, self.img_dir, transform)
-        val_dateset= train_dataSet(train_data, self.img_dir, transform)
+        train_dataset = train_dataSet(train_data, self.img_dir, self.transform)
+        val_dateset= train_dataSet(train_data, self.img_dir, self.transform)
         # data -> DataLoader
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = DataLoader(val_dateset, batch_size=self.batch_size, shuffle=False)
@@ -67,8 +68,8 @@ class Trainer:
         :param outputs: Predicted outputs (already processed through torch.max).
         :param labels: Ground truth labels.
         """
-        predicted = outputs.cpu().numpy()  # 预测值已经是 torch.max 的结果
-        labels = labels.cpu().numpy()  # 标签直接使用
+        predicted = outputs.cpu().numpy()
+        labels = labels.cpu().numpy()
         report = classification_report(labels, predicted, digits=3, zero_division=0)
         print(report)
 
@@ -78,13 +79,12 @@ class Trainer:
         :param outputs: Predicted outputs (already processed through torch.max).
         :param labels: Ground truth labels.
         """
-        predicted = outputs.cpu().numpy()  # 预测值已经是 torch.max 的结果
-        labels = labels.cpu().numpy()  # 标签直接使用
+        predicted = outputs.cpu().numpy()
+        labels = labels.cpu().numpy()
         cm = confusion_matrix(labels, predicted)
         print(cm)
 
     def validate(self):
-        '''Validation on a validation set'''
 
         self.model.eval()
         val_loss = 0.0
@@ -97,7 +97,8 @@ class Trainer:
             for inputs, labels, _ in self.val_loader:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
-                labels = labels - 1  # (0,5) <- label(1,6)
+                if (self.stratify_column == "stable_height" or self.stratify_column == "total_height"):
+                    labels = labels - 1  # (0,5) <- label(1,6)
 
                 outputs = self.model(inputs)
 
@@ -131,8 +132,8 @@ class Trainer:
                 tepoch.set_description(f"Epoch {epoch + 1}/{self.num_epochs}")
                 for inputs, labels, _ in tepoch:
                     inputs, labels = inputs.to(self.device), labels.to(self.device).long()
-                    labels = labels - 1  # (0,5) <- label(1,6)
-
+                    if (self.stratify_column == "stable_height" or self.stratify_column=="total_height"):
+                        labels = labels - 1  # (0,5) <- label(1,6)
                     # Gradient Descent & Backpropagation
                     self.optimizer.zero_grad()
                     outputs = self.model(inputs)
@@ -169,10 +170,13 @@ class Trainer:
         '''Create a directory where logs and models are saved'''
         current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         log_dir = f'runs/experiment_{current_time}'
-        solution_dir = f'trained_models/experiment_{current_time}'
+        solution_dir = f'trained_models/{self.stratify_column}_{current_time}'
         os.makedirs(log_dir, exist_ok=True)
         os.makedirs(solution_dir, exist_ok=True)
         return log_dir, solution_dir
+
+
+
 
 
 if __name__ == "__main__":
@@ -185,7 +189,7 @@ if __name__ == "__main__":
     ])
 
     # choose model
-    model = model.Stack_GoogleNet()  # Use your modified multi-class classification model
+    model = models.Stack_Inception()  # Use your modified multi-class classification model
 
     # define optimizer
     criterion = torch.nn.CrossEntropyLoss()  # For multi-class classification
@@ -197,6 +201,7 @@ if __name__ == "__main__":
         img_dir='./COMP90086_2024_Project_train/train',
         model=model,
         transform=transform,
+        stratify_column="stable_height",
         criterion=criterion,
         optimizer=optimizer,
         num_epochs=8
