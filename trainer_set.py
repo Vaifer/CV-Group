@@ -12,7 +12,7 @@ class train_set:
         self.csv_file = csv_file
         self.img_dir = img_dir
 
-    def baseline_trainer(self,lr=0.001,num_epochs=8):
+    def baseline_trainer(self,lr=0.001,num_epochs=16):
         '''
         Baseline for stable_height classification
         :param lr:
