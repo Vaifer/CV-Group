@@ -9,11 +9,12 @@ class train_dataSet(Dataset):
     """
     Load the dataset
     """
-    def __init__(self, data_frame, img_dir, transform=None):
+    def __init__(self, data_frame, img_dir, column_set=0, transform=None):
 
         self.data_frame = data_frame
         self.img_dir = img_dir
         self.transform = transform
+        self.column_set=column_set
 
         # check directory and access
         if not os.path.exists(self.img_dir):
@@ -31,7 +32,7 @@ class train_dataSet(Dataset):
         image = Image.open(img_name).convert('RGB')
 
         # column
-        label = self.data_frame.iloc[idx, -1]
+        stable_height = self.data_frame.iloc[idx, -1]
         # whether the stack contains (1) only cubes or (2) multiple shapes
         shapeset = self.data_frame.iloc[idx, 1]
         # (1) easy or (2) hard
@@ -43,15 +44,25 @@ class train_dataSet(Dataset):
         # (1) low or (2) high
         cam_angle = self.data_frame.iloc[idx, 5]
 
-        # Create new 'stable' column based on 'instability_type'
-        # stable = 0 if instability_type == 0 else 1
+        # Create new column
+        #if stable
+        stable = 0 if instability_type == 0 else 1
+        # if non-planar surface
+        non_planar = 1 if instability_type == 2 else 0
 
         # preprocessing <- transform
         if self.transform:
             image = self.transform(image)
 
-        # choose column here
-        return image, label , instability_type
+        if self.column_set ==1:# ->total_height
+            return image, total_height , instability_type
+
+        elif self.column_set ==2: # ->instability_type
+            return image, instability_type,stable_height
+        elif self.column_set == -3: #-> non_planar/stable
+            return image, shapeset, stable_height
+        else:#default: ->stable_height
+            return image, stable_height , instability_type
 
 class test_dataSet(Dataset):
     def __init__(self, data_frame, img_dir, transform=None):

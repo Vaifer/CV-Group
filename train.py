@@ -14,7 +14,7 @@ import models
 from dataSet import train_dataSet
 
 class Trainer:
-    def __init__(self,csv_file, img_dir, model, transform,criterion, optimizer, stratify_column,random_state=8, test_size=0.2, batch_size=32, num_epochs=10):
+    def __init__(self,csv_file, img_dir, model, transform,criterion, optimizer, stratify_column,column_set,random_state=8, test_size=0.2, batch_size=32, num_epochs=10):
         # Initialize training parameters
         self.csv_file = csv_file
         self.img_dir = img_dir
@@ -23,6 +23,7 @@ class Trainer:
         self.test_size = test_size
         self.batch_size = batch_size
         self.num_epochs = num_epochs
+        self.column_set=column_set
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)  # Move model to GPU if available
         self.random_state = random_state
@@ -48,8 +49,8 @@ class Trainer:
 
         print(f"train_size: {len(train_data)}, val_size: {len(val_data)}")
 
-        train_dataset = train_dataSet(train_data, self.img_dir, self.transform)
-        val_dateset= train_dataSet(train_data, self.img_dir, self.transform)
+        train_dataset = train_dataSet(train_data, self.img_dir,self.column_set, self.transform)
+        val_dateset= train_dataSet(val_data, self.img_dir,self.column_set, self.transform)
         # data -> DataLoader
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = DataLoader(val_dateset, batch_size=self.batch_size, shuffle=False)
@@ -97,7 +98,7 @@ class Trainer:
             for inputs, labels, _ in self.val_loader:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
-                if (self.stratify_column == "stable_height" or self.stratify_column == "total_height"):
+                if (self.column_set <2):
                     labels = labels - 1  # (0,5) <- label(1,6)
 
                 outputs = self.model(inputs)
@@ -132,7 +133,8 @@ class Trainer:
                 tepoch.set_description(f"Epoch {epoch + 1}/{self.num_epochs}")
                 for inputs, labels, _ in tepoch:
                     inputs, labels = inputs.to(self.device), labels.to(self.device).long()
-                    if (self.stratify_column == "stable_height" or self.stratify_column=="total_height"):
+
+                    if (self.column_set < 2):
                         labels = labels - 1  # (0,5) <- label(1,6)
                     # Gradient Descent & Backpropagation
                     self.optimizer.zero_grad()

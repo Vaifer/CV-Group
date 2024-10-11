@@ -85,7 +85,7 @@ if __name__ == "__main__":
     model = models.Stack_Inception()
 
     # Paths to required files
-    model_path = 'trained_models/stable_height_2024-10-08_22-26-28/best_model.pth'  # Path to the saved model
+    model_path = 'trained_models/stable_height_2024-10-08_22-51-29/best_model.pth'  # Path to the saved model
     test_csv = 'COMP90086_2024_Project_test/test.csv'  # Path to the CSV file containing test data
     img_dir = 'COMP90086_2024_Project_test/test'  # Path to the directory containing images
 
