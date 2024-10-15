@@ -46,7 +46,7 @@ class train_dataSet(Dataset):
 
         # Create new column
         #if stable
-        stable = 0 if instability_type == 0 else 1
+        # instability_type = 0 if instability_type == 0 else 1
         # if non-planar surface
         non_planar = 1 if instability_type == 2 else 0
 
@@ -54,6 +54,8 @@ class train_dataSet(Dataset):
         if self.transform:
             image = self.transform(image)
 
+
+        # Provide column data as required
         if self.column_set ==1:# ->total_height
             return image, total_height , instability_type
 
@@ -61,6 +63,9 @@ class train_dataSet(Dataset):
             return image, instability_type,stable_height
         elif self.column_set == -3: #-> non_planar/stable
             return image, shapeset, stable_height
+        elif self.column_set == 4:
+            stable_height = 1 if instability_type == 1 else 0
+            return image,stable_height,instability_type
         else:#default: ->stable_height
             return image, stable_height , instability_type
 

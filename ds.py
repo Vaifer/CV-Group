@@ -35,14 +35,18 @@ class CSVDataVisualizer:
                     total = len(self.data[column_name])
                     percentages = (counts / total) * 100
 
-                    # 清空现有图形并重新绘制带有百分比的柱形图
-                    plt.clf()
-                    plt.bar(bins[:-1], percentages, width=(bins[1] - bins[0]), edgecolor='black', alpha=0.7)
-                    plt.ylabel('比例 (%)')
+                    # 在每个柱形条上显示百分比，只显示大于0的百分比
+                    for count, percentage, patch in zip(counts, percentages, patches):
+                        height = patch.get_height()
+                        if percentage > 0:  # 仅显示大于0的百分比
+                            plt.text(patch.get_x() + patch.get_width() / 2, height + 1, f'{percentage:.2f}%',
+                                     ha='center', va='bottom', fontsize=10)
+
+                    plt.ylabel('nums')
                 else:
                     plt.ylabel('频数')
 
-                plt.title(f'{column_name} 数据分布')
+                plt.title(f'{column_name}  distribution')
                 plt.xlabel(column_name)
                 plt.show()
             else:
@@ -64,7 +68,4 @@ class CSVDataVisualizer:
 train_csv_dir = './COMP90086_2024_Project_train/train.csv'
 visualizer = CSVDataVisualizer(train_csv_dir)
 visualizer.load_data()
-visualizer.plot_distribution(show_percentage=True)  # 显示所有数值列的比例分布
-
-
-
+visualizer.plot_distribution(column_name="stable_height", show_percentage=True)  # 显示所有数值列的比例分布

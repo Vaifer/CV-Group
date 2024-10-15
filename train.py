@@ -14,7 +14,7 @@ import models
 from dataSet import train_dataSet
 
 class Trainer:
-    def __init__(self,csv_file, img_dir, model, transform,criterion, optimizer, stratify_column,column_set,random_state=8, test_size=0.2, batch_size=32, num_epochs=10):
+    def __init__(self,csv_file, img_dir, model, transform,criterion, optimizer, stratify_column,column_set,clean_column="N",clean_column_value=0,random_state=8, test_size=0.2, batch_size=32, num_epochs=10):
         # Initialize training parameters
         self.csv_file = csv_file
         self.img_dir = img_dir
@@ -24,6 +24,8 @@ class Trainer:
         self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.column_set=column_set
+        self.clean_column=clean_column
+        self.clean_column_value=clean_column_value
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)  # Move model to GPU if available
         self.random_state = random_state
@@ -38,7 +40,13 @@ class Trainer:
 
         # Load and partition the dataset
         self.data_frame = pd.read_csv(csv_file)
+        self.data_cleaning()
         self.train_loader, self.val_loader = self.split_dataset()
+
+    def data_cleaning(self):
+
+        if(self.clean_column !="N"):
+            self.data_frame = self.data_frame[self.data_frame[self.clean_column] != self.clean_column_value]
 
     def split_dataset(self):
         split = StratifiedShuffleSplit(n_splits=1, test_size=self.test_size, random_state=self.random_state)
@@ -123,6 +131,7 @@ class Trainer:
         log_dir, solution_dir = self.create_log_dir()
         writer = SummaryWriter(log_dir)
         best_val_accuracy = 0.0
+        scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=10, gamma=0.5)
 
         for epoch in range(self.num_epochs):
             self.model.train()
@@ -163,7 +172,7 @@ class Trainer:
                 best_val_accuracy = val_accuracy
                 torch.save(self.model.state_dict(), f"{solution_dir}/best_model.pth")
                 print("Saved best model")
-
+            scheduler.step()
             print(f"Current best validation accuracy: {best_val_accuracy:.4f}")
 
         writer.close()

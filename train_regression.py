@@ -52,10 +52,15 @@ class BlockStackTrainer:
             train_data = self.data_frame.iloc[train_idx]
             val_data = self.data_frame.iloc[val_idx]
 
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
         # size -> os
         print(f"train_size: {len(train_data)}, val_size: {len(val_data)}")
         train_loader = self.create_dataloader(train_data, self.transform,True)
-        val_loader = self.create_dataloader(val_data, self.transform, False)
+        val_loader = self.create_dataloader(val_data, transform, False)
         return train_loader, val_loader
     def calculate_accuracy(self, outputs, labels):
         predicted = torch.round(outputs).clamp(min=1, max=6)

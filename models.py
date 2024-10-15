@@ -111,14 +111,14 @@ class Stack_Inception(nn.Module):
         self.model.last_linear =  nn.Linear(in_features, num_classes)
         # self.model.head = nn.Identity()
 
-        # self.fc = nn.Sequential(
-        #     nn.Linear(in_features, 128),  # First FC layer: 1536 -> 128
-        #     nn.ReLU(),  # Activation function
-        #     nn.Dropout(0.3),  # Dropout to prevent overfitting
-        #     nn.Linear(128, num_classes),
-        # )
+        self.fc = nn.Sequential(
+            nn.Linear(in_features, 128),  # 第一个全连接层
+            nn.ReLU(),  # 激活函数
+            nn.Dropout(0.5),  # 增加 Dropout，尝试 0.5
+            nn.Linear(128, num_classes),  # 最后一层输出
+        )
 
     def forward(self, x):
         # Forward pass through the model
-
-        return self.model(x)
+        x=self.model(x)
+        return x
